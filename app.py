@@ -36,6 +36,36 @@ def carregar_estoque_inicial():
     return df_estoque
 
 df_estoque = carregar_estoque_inicial()
+
+@st.cache_data
+def carregar_precos():
+    try:
+        # Tenta carregar o seu novo arquivo de preços
+        df_precos = pd.read_csv('loja - Precos.csv')
+    except FileNotFoundError:
+        try:
+            # Fallback: Tenta puxar daquela planilha de "Simulação" que você enviou
+            df_precos = pd.read_csv('loja - Simulação.csv')
+        except FileNotFoundError:
+            # Dados de exemplo caso nenhum arquivo seja encontrado
+            csv_precos = """Vinho,Custo,Venda\nAlma Negra,360,550\nAlamos Malbec,90,205\nMalbec Argentino,940,1280"""
+            df_precos = pd.read_csv(io.StringIO(csv_precos))
+    
+    # Limpeza para caso os valores venham formatados como "R$ 360,00"
+    def limpar_moeda(valor):
+        if isinstance(valor, str):
+            valor = valor.replace('R$', '').replace('.', '').replace(',', '.').strip()
+        return pd.to_numeric(valor, errors='coerce')
+        
+    if 'Custo' in df_precos.columns:
+        df_precos['Custo'] = df_precos['Custo'].apply(limpar_moeda)
+    if 'Venda' in df_precos.columns:
+        df_precos['Venda'] = df_precos['Venda'].apply(limpar_moeda)
+        
+    return df_precos
+
+df_precos = carregar_precos()
+
 # Em vez de ler do CSV, puxamos as tabelas em branco da memória da sessão
 df_compras = st.session_state['compras']
 df_vendas = st.session_state['vendas']
@@ -211,14 +241,29 @@ with tab2:
 
     # Formulário para adicionar nova VENDA
     with tab_venda:
+        st.write("📤 Registrar Venda (Saída Única)")
+        
+        # O seletor de vinho fica FORA do formulário para atualizar a tela na hora (PROCV dinâmico)
+        vinho_v = st.selectbox("Vinho", df_estoque['Vinho'].unique())
+        
+        # --- LÓGICA DO PROCV ---
+        custo_sugerido = None
+        preco_v_sugerido = None
+        
+        if vinho_v in df_precos['Vinho'].values:
+            linha = df_precos[df_precos['Vinho'] == vinho_v].iloc[0]
+            if 'Custo' in df_precos.columns and pd.notna(linha['Custo']):
+                custo_sugerido = float(linha['Custo'])
+            if 'Venda' in df_precos.columns and pd.notna(linha['Venda']):
+                preco_v_sugerido = float(linha['Venda'])
+        # -----------------------
+
         with st.form("form_venda", clear_on_submit=True):
-            st.write("📤 Registrar Venda (Saída Única)")
-            vinho_v = st.selectbox("Vinho", df_estoque['Vinho'].unique())
-            
             col_v1, col_v2, col_v3 = st.columns(3)
             qtd_v = col_v1.number_input("Qtd (Caixas)", min_value=1, step=1)
-            preco_v = col_v2.number_input("Preço de Venda (R$)", min_value=0.0, step=5.0, value=None, placeholder="Ex: 550,00")
-            custo_v = col_v3.number_input("Custo da Caixa (R$)", min_value=0.0, step=5.0, value=None, placeholder="Ex: 360,00")
+            # Os campos de preço agora nascem com o 'value' preenchido pelo PROCV
+            preco_v = col_v2.number_input("Preço de Venda (R$)", min_value=0.0, step=5.0, value=preco_v_sugerido, placeholder="Ex: 550,00")
+            custo_v = col_v3.number_input("Custo da Caixa (R$)", min_value=0.0, step=5.0, value=custo_sugerido, placeholder="Ex: 360,00")
             
             data_v = st.date_input("Data da Venda", datetime.date.today(), format="DD/MM/YYYY")
             cliente = st.text_input("Cliente")
