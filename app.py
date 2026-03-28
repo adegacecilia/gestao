@@ -196,7 +196,7 @@ with tab2:
                         df_lote['Fornecedor'] = fornecedor
                         
                         # Organiza a ordem das colunas para exibir bonito no histórico
-                        df_lote = df_lote[['Data', 'Fornecedor', 'Vinho', 'Qtd', 'Preço Unitário (R$)', 'Custo Total (R$)']]
+                        df_lote = df_lote[['Data', 'Fornecedor', 'Vinho', 'Qtd', 'Preço por Caixa (R$)', 'Custo Total (R$)']]
                         
                         # Junta com o histórico principal de compras
                         st.session_state['compras'] = pd.concat([st.session_state['compras'], df_lote], ignore_index=True)
