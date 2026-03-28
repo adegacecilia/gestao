@@ -28,7 +28,7 @@ if 'lote_atual' not in st.session_state:
 def carregar_estoque_inicial():
     try:
         # Lê o seu arquivo local
-        df_estoque = pd.read_csv('dados/loja - Estoque.csv')
+        df_estoque = pd.read_csv('loja - Estoque.csv')
     except FileNotFoundError:
         # Exemplo de fallback caso o arquivo não seja encontrado na hora de testar
         csv_estoque = """Vinho,Estoque Inicial,Status\nChandon Brut,2,M&A\nEl Enemigo Chardonnay,3,M&A"""
