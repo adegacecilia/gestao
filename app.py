@@ -134,7 +134,7 @@ with tab1:
     
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Total de Rótulos", len(df_saldo))
-    col2.metric("📦 Estoque Físico (cx)", f"{(df_saldo['Estoque Físico'].sum()):.0f}")
+    col2.metric("📦 Estoque Disponível (cx)", f"{(df_saldo['Estoque Físico'].sum()):.0f}")
     col3.metric("🚚 Em Transporte (cx)", f"{(df_saldo['Em Transporte'].sum()):.0f}")
     col4.metric("Total Vendido (cx)", f"{(df_saldo['Total Vendido'].sum()):.0f}")
     
