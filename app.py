@@ -56,10 +56,6 @@ if 'vendas' not in st.session_state:
 if 'lote_atual' not in st.session_state:
     st.session_state['lote_atual'] = []
 
-# Memória para rastrear os vinhos do CSV (Estoque Inicial) que chegaram
-if 'recebidos_iniciais' not in st.session_state:
-    st.session_state['recebidos_iniciais'] = []
-
 # --- 1. CARREGAMENTO DOS DADOS ---
 @st.cache_data
 def carregar_estoque_inicial():
@@ -72,13 +68,9 @@ def carregar_estoque_inicial():
 
 df_estoque_raw = carregar_estoque_inicial()
 
-# Padroniza o status do CSV inicial (Verifica se já foi marcado como recebido no App)
+# Padroniza o status do CSV inicial: Consideramos tudo como Estoque Físico para a aba de Entregas começar limpa
 df_estoque = df_estoque_raw.copy()
-df_estoque['Status_Norm'] = df_estoque.apply(
-    lambda row: 'Estoque' if row.name in st.session_state['recebidos_iniciais'] 
-                else ('Em transporte' if str(row['Status']).strip().lower() in ['transporte', 'em transporte'] else 'Estoque'), 
-    axis=1
-)
+df_estoque['Status_Norm'] = 'Estoque'
 
 @st.cache_data
 def carregar_precos():
@@ -336,28 +328,52 @@ with tab2:
     with tab_entregas:
         st.write("Marque as compras e mercadorias que acabaram de chegar fisicamente na adega.")
         
-        pendentes_iniciais = df_estoque[df_estoque['Status_Norm'] == 'Em transporte']
         pendentes_compras = st.session_state['compras'][st.session_state['compras']['Status'] == 'Em transporte']
         
-        if not pendentes_iniciais.empty or not pendentes_compras.empty:
+        if not pendentes_compras.empty:
+            st.markdown("#### 📦 Pendências de Novas Compras (Lotes)")
             
-            if not pendentes_iniciais.empty:
-                st.markdown("#### 📦 Pendências do Estoque Inicial")
-                for idx, row in pendentes_iniciais.iterrows():
-                    c1, c2 = st.columns([5, 1])
-                    c1.write(f"🍷 **{row['Vinho']}** - {row['Estoque Inicial']} cx pendentes")
-                    if c2.button("✅ Receber", key=f"rec_ini_{idx}", help="Transferir para o Estoque Físico"):
-                        st.session_state['recebidos_iniciais'].append(idx)
+            # Agrupa as compras pendentes por Data e Fornecedor para criar "Lotes" virtuais
+            lotes_pendentes = pendentes_compras.groupby(['Data', 'Fornecedor'])
+            
+            for (data_lote, fornecedor_lote), df_lote in lotes_pendentes:
+                st.markdown(f"**📅 Lote de {data_lote} | 👤 Fornecedor: {fornecedor_lote}**")
+                
+                # Lista o resumo do que tem no lote
+                resumo_lote = ", ".join([f"{int(r['Qtd'])}x {r['Vinho']}" for _, r in df_lote.iterrows()])
+                st.caption(f"Itens pendentes: {resumo_lote}")
+                
+                col_b1, col_b2 = st.columns(2)
+                with col_b1:
+                    if st.button("✅ Receber Lote Completo", key=f"rec_lote_{data_lote}_{fornecedor_lote}", use_container_width=True):
+                        st.session_state['compras'].loc[df_lote.index, 'Status'] = 'Estoque'
                         st.rerun()
                         
-            if not pendentes_compras.empty:
-                st.markdown("#### 📦 Pendências de Novas Compras")
-                for idx, row in pendentes_compras.iterrows():
-                    c1, c2 = st.columns([5, 1])
-                    c1.write(f"📅 {row['Data']} | 🍷 **{row['Vinho']}** - {row['Qtd']} cx (Fornecedor: {row['Fornecedor']})")
-                    if c2.button("✅ Receber", key=f"rec_comp_{idx}", help="Transferir para o Estoque Físico"):
-                        st.session_state['compras'].at[idx, 'Status'] = 'Estoque'
-                        st.rerun()
+                with col_b2:
+                    with st.expander("Receber Incompleto / Parcial"):
+                        for idx, row in df_lote.iterrows():
+                            st.write(f"🍷 **{row['Vinho']}** (Esperado: {int(row['Qtd'])} cx)")
+                            c_qtd, c_btn = st.columns([1, 1])
+                            qtd_rec = c_qtd.number_input("Recebido:", min_value=1, max_value=int(row['Qtd']), value=int(row['Qtd']), key=f"qtd_parc_{idx}")
+                            if c_btn.button("Salvar Item", key=f"btn_parc_{idx}", use_container_width=True):
+                                if qtd_rec == int(row['Qtd']):
+                                    st.session_state['compras'].at[idx, 'Status'] = 'Estoque'
+                                else:
+                                    # Atualiza a linha atual para recebido
+                                    st.session_state['compras'].at[idx, 'Status'] = 'Estoque'
+                                    st.session_state['compras'].at[idx, 'Qtd'] = qtd_rec
+                                    st.session_state['compras'].at[idx, 'Custo Total (R$)'] = qtd_rec * row['Preço por Caixa (R$)']
+                                    
+                                    # Cria uma nova linha com o que ficou faltando e mantém "Em transporte"
+                                    qtd_faltante = int(row['Qtd']) - qtd_rec
+                                    nova_linha = row.copy()
+                                    nova_linha['Qtd'] = qtd_faltante
+                                    nova_linha['Status'] = 'Em transporte'
+                                    nova_linha['Custo Total (R$)'] = qtd_faltante * row['Preço por Caixa (R$)']
+                                    
+                                    st.session_state['compras'] = pd.concat([st.session_state['compras'], pd.DataFrame([nova_linha])], ignore_index=True)
+                                st.rerun()
+                st.divider()
         else:
             st.success("🎉 Tudo em dia! Nenhuma entrega pendente de transportadora no momento.")
 
