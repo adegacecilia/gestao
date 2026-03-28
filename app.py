@@ -167,7 +167,7 @@ with tab2:
             # Loop para mostrar cada item com um botão de excluir ao lado
             for i, item in enumerate(st.session_state['lote_atual']):
                 c1, c2, c3 = st.columns([4, 2, 1])
-                c1.write(f"🍷 **{item['Vinho']}** ({item['Qtd']} un. a R$ {item['Preço Unitário (R$)']:.2f})")
+                c1.write(f"🍷 **{item['Vinho']}** ({item['Qtd']} un. a R$ {item['Preço por Caixa (R$)']:.2f})")
                 c2.write(f"Subtotal: R$ {item['Custo Total (R$)']:.2f}")
                 if c3.button("❌", key=f"del_lote_{i}", help="Excluir este vinho do lote"):
                     st.session_state['lote_atual'].pop(i)
