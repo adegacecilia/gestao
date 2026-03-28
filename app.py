@@ -271,7 +271,7 @@ with tab3:
     
     # Exemplo interativo
     vinho_simulacao = st.selectbox("Selecione um Vinho para simular:", df_saldo['Vinho'].unique())
-    custo = st.number_input("Custo da Garrafa (R$)", value=100.0, step=5.0)
+    custo = st.number_input("Custo por Caixa (R$)", value=100.0, step=5.0)
     preco_venda = st.number_input("Preço de Venda (R$)", value=100.0, step=5.0)
     frete = st.number_input("Custo do Frete (R$)", value=90.0, step=5.0)
     
