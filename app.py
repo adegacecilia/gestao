@@ -146,16 +146,19 @@ with tab2:
             col_a, col_b, col_c = st.columns([2, 1, 1])
             vinho_c = col_a.selectbox("Vinho", df_estoque['Vinho'].unique())
             qtd_c = col_b.number_input("Qtd", min_value=1, step=1)
-            preco_u = col_c.number_input("Preço Unit. (R$)", min_value=0.0, step=5.0, format="%.2f")
+            preco_u = col_c.number_input("Preço por Caixa (R$)", min_value=0.0, step=5.0, format="%.2f", value=None, placeholder="0,00")
             
             if st.form_submit_button("Adicionar ao Lote"):
-                st.session_state['lote_atual'].append({
-                    'Vinho': vinho_c,
-                    'Qtd': qtd_c,
-                    'Preço Unitário (R$)': preco_u,
-                    'Custo Total (R$)': qtd_c * preco_u
-                })
-                st.rerun()
+                if preco_u is None:
+                    st.error("⚠️ Preencha o preço antes de adicionar!")
+                else:
+                    st.session_state['lote_atual'].append({
+                        'Vinho': vinho_c,
+                        'Qtd': qtd_c,
+                        'Preço por Caixa (R$)': preco_u,
+                        'Custo Total (R$)': qtd_c * preco_u
+                    })
+                    st.rerun()
         
         # Mostrar os itens que já estão no lote atual
         if len(st.session_state['lote_atual']) > 0:
@@ -214,25 +217,28 @@ with tab2:
             
             col_v1, col_v2, col_v3 = st.columns(3)
             qtd_v = col_v1.number_input("Qtd (Caixas)", min_value=1, step=1)
-            preco_v = col_v2.number_input("Preço de Venda (R$)", min_value=0.0, step=5.0, value=550.0)
-            custo_v = col_v3.number_input("Custo da Caixa (R$)", min_value=0.0, step=5.0, value=360.0)
+            preco_v = col_v2.number_input("Preço de Venda (R$)", min_value=0.0, step=5.0, value=None, placeholder="Ex: 550,00")
+            custo_v = col_v3.number_input("Custo da Caixa (R$)", min_value=0.0, step=5.0, value=None, placeholder="Ex: 360,00")
             
             data_v = st.date_input("Data da Venda", datetime.date.today())
             cliente = st.text_input("Cliente")
             
             if st.form_submit_button("Adicionar Venda"):
-                nova_venda = pd.DataFrame([{
-                    'Vinho': vinho_v, 
-                    'Qtd': qtd_v, 
-                    'Data': data_v.strftime("%d/%m/%Y"), 
-                    'Cliente': cliente,
-                    'Preço Venda Unit. (R$)': preco_v,
-                    'Receita Total (R$)': qtd_v * preco_v,
-                    'Custo Unitário Base (R$)': custo_v,
-                    'Lucro (R$)': (preco_v - custo_v - 90) * qtd_v
-                }])
-                st.session_state['vendas'] = pd.concat([st.session_state['vendas'], nova_venda], ignore_index=True)
-                st.rerun()
+                if preco_v is None or custo_v is None:
+                    st.error("⚠️ Preencha o preço de venda e o custo antes de adicionar!")
+                else:
+                    nova_venda = pd.DataFrame([{
+                        'Vinho': vinho_v, 
+                        'Qtd': qtd_v, 
+                        'Data': data_v.strftime("%d/%m/%Y"), 
+                        'Cliente': cliente,
+                        'Preço Venda (R$)': preco_v,
+                        'Receita Total (R$)': qtd_v * preco_v,
+                        'Custo por Caixa (R$)': custo_v,
+                        'Lucro (R$)': (preco_v - custo_v - 90) * qtd_v
+                    }])
+                    st.session_state['vendas'] = pd.concat([st.session_state['vendas'], nova_venda], ignore_index=True)
+                    st.rerun()
 
     st.divider()
     st.subheader("Histórico de Movimentações")
@@ -271,15 +277,19 @@ with tab3:
     
     # Exemplo interativo
     vinho_simulacao = st.selectbox("Selecione um Vinho para simular:", df_saldo['Vinho'].unique())
-    custo = st.number_input("Custo por Caixa (R$)", value=100.0, step=5.0)
-    preco_venda = st.number_input("Preço de Venda (R$)", value=100.0, step=5.0)
-    frete = st.number_input("Custo do Frete (R$)", value=90.0, step=5.0)
+    custo = st.number_input("Custo por Caixa (R$)", value=None, placeholder="Ex: 100.00", step=5.0)
+    preco_venda = st.number_input("Preço de Venda (R$)", value=None, placeholder="Ex: 150.00", step=5.0)
+    frete = st.number_input("Custo do Frete (R$)", value=None, placeholder="Ex: 90.00", step=5.0)
     
-    margem = ((preco_venda - custo - frete) / custo)*100
-    lucro = preco_venda - custo - frete
-    
-    st.success(f"**Margem:** {margem:.2f} %")
-    st.write(f"**Lucro por garrafa:** R$ {lucro:.2f}")
+    if custo is not None and preco_venda is not None and frete is not None:
+        if custo > 0:
+            margem = ((preco_venda - custo - frete) / custo)*100
+        else:
+            margem = 0.0
+        lucro = preco_venda - custo - frete
+        
+        st.success(f"**Margem:** {margem:.2f} %")
+        st.write(f"**Lucro por caixa:** R$ {lucro:.2f}")
 
 st.divider()
 st.caption("Desenvolvido em Python com Streamlit | Sistema de Gestão de Vinhos")
