@@ -70,8 +70,8 @@ with tab1:
     # Exibir métricas principais (Convertidas para Caixas)
     col1, col2, col3 = st.columns(3)
     col1.metric("Total de Rótulos (Tipos de Vinho)", len(df_saldo))
-    col2.metric("Total no Estoque (Caixas)", f"{(df_saldo['Estoque Atual'].sum()):.1f} cx")
-    col3.metric("Total Vendido (Caixas)", f"{(df_saldo['Total Vendido'].sum()):.1f} cx")
+    col2.metric("Total no Estoque (Caixas)", f"{(df_saldo['Estoque Atual'].sum())} cx")
+    col3.metric("Total Vendido (Caixas)", f"{(df_saldo['Total Vendido'].sum())} cx")
     
     st.divider()
     st.subheader("📈 Desempenho de Vendas & Lucro")
