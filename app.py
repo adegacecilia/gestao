@@ -89,8 +89,8 @@ with tab1:
         hoje = datetime.date.today()
         primeiro_dia_mes = hoje.replace(day=1)
         
-        start_date = col_cal1.date_input("Data Inicial", primeiro_dia_mes)
-        end_date = col_cal2.date_input("Data Final", hoje)
+        start_date = col_cal1.date_input("Data Inicial", primeiro_dia_mes, format="DD/MM/YYYY")
+        end_date = col_cal2.date_input("Data Final", hoje, format="DD/MM/YYYY")
         
         # Filtra as vendas no período selecionado
         mask = (df_v['Data_dt'].dt.date >= start_date) & (df_v['Data_dt'].dt.date <= end_date)
@@ -104,9 +104,9 @@ with tab1:
         # Exibição das métricas
         st.markdown(f"**Resultados de {start_date.strftime('%d/%m/%Y')} a {end_date.strftime('%d/%m/%Y')}:**")
         col_d1, col_d2, col_d3 = st.columns(3)
-        col_d1.metric("📦 Caixas Vendidas", f"{caixas:.1f} cx")
-        col_d2.metric("💰 Lucro Total", f"R$ {lucro_total:,.2f}")
-        col_d3.metric("📊 Lucro Médio por Caixa", f"R$ {lucro_por_caixa:,.2f}")
+        col_d1.metric("📦 Caixas Vendidas", f"{caixas}")
+        col_d2.metric("💰 Lucro Total", f"R$ {lucro_total:.2f}")
+        col_d3.metric("📊 Lucro Médio por Caixa", f"R$ {lucro_por_caixa:.2f}")
     else:
         st.info("Registre algumas vendas na aba 'Movimentações' para ver os indicadores de desempenho de caixas e lucro!")
         
@@ -138,7 +138,7 @@ with tab2:
         
         # Dados gerais da nota/lote
         col_info1, col_info2 = st.columns(2)
-        data_c = col_info1.date_input("Data da Compra", datetime.date.today())
+        data_c = col_info1.date_input("Data da Compra", datetime.date.today(), format="DD/MM/YYYY")
         fornecedor = col_info2.text_input("Fornecedor", placeholder="Ex: Márcia")
         
         st.markdown("#### 1. Adicionar Vinhos ao Lote")
@@ -220,7 +220,7 @@ with tab2:
             preco_v = col_v2.number_input("Preço de Venda (R$)", min_value=0.0, step=5.0, value=None, placeholder="Ex: 550,00")
             custo_v = col_v3.number_input("Custo da Caixa (R$)", min_value=0.0, step=5.0, value=None, placeholder="Ex: 360,00")
             
-            data_v = st.date_input("Data da Venda", datetime.date.today())
+            data_v = st.date_input("Data da Venda", datetime.date.today(), format="DD/MM/YYYY")
             cliente = st.text_input("Cliente")
             
             if st.form_submit_button("Adicionar Venda"):
