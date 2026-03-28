@@ -9,6 +9,21 @@ st.set_page_config(page_title="Gestão de Vinhos", page_icon="🍷", layout="wid
 st.title("🍷 Sistema de Gestão de Vinhos")
 st.markdown("Adega Cecília")
 
+# --- PERSONALIZAÇÃO VISUAL (CSS) ---
+st.markdown("""
+    <style>
+    /* Remove a borda e o brilho vermelho ao focar/clicar nas caixas de seleção (selectbox) e inputs */
+    div[data-baseweb="select"] > div:focus-within {
+        box-shadow: none !important;
+        border-color: #cccccc !important;
+    }
+    div[data-baseweb="input"] > div:focus-within {
+        box-shadow: none !important;
+        border-color: #cccccc !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- 0. INICIALIZAÇÃO DA SESSÃO (MEMÓRIA DO APP) ---
 # Como queremos zerar as compras e vendas e adicionar manualmente, 
 # criamos tabelas vazias na "memória" do Streamlit.
@@ -174,7 +189,11 @@ with tab2:
         st.markdown("#### 1. Adicionar Vinhos ao Lote")
         with st.form("form_item_lote", clear_on_submit=True):
             col_a, col_b, col_c = st.columns([2, 1, 1])
-            vinho_c = col_a.selectbox("Vinho", df_estoque['Vinho'].unique())
+            
+            # Lista de vinhos em ordem alfabética
+            lista_vinhos_estoque = sorted(df_estoque['Vinho'].unique())
+            vinho_c = col_a.selectbox("Vinho", lista_vinhos_estoque)
+            
             qtd_c = col_b.number_input("Qtd", min_value=1, step=1)
             preco_u = col_c.number_input("Preço por Caixa (R$)", min_value=0.0, step=5.0, format="%.2f", value=None, placeholder="0,00")
             
@@ -243,8 +262,10 @@ with tab2:
     with tab_venda:
         st.write("📤 Registrar Venda (Saída Única)")
         
+        # Lista de vinhos em ordem alfabética
+        lista_vinhos_estoque = sorted(df_estoque['Vinho'].unique())
         # O seletor de vinho fica FORA do formulário para atualizar a tela na hora (PROCV dinâmico)
-        vinho_v = st.selectbox("Vinho", df_estoque['Vinho'].unique())
+        vinho_v = st.selectbox("Vinho", lista_vinhos_estoque)
         
         # --- LÓGICA DO PROCV ---
         custo_sugerido = None
@@ -321,7 +342,8 @@ with tab3:
     st.info("Aqui podemos importar a sua planilha 'loja - Simulação.csv' e criar sliders interativos para prever lucro baseado na margem desejada!")
     
     # Exemplo interativo
-    vinho_simulacao = st.selectbox("Selecione um Vinho para simular:", df_saldo['Vinho'].unique())
+    lista_vinhos_simulacao = sorted(df_saldo['Vinho'].unique())
+    vinho_simulacao = st.selectbox("Selecione um Vinho para simular:", lista_vinhos_simulacao)
     custo = st.number_input("Custo por Caixa (R$)", value=None, placeholder="Ex: 100.00", step=5.0)
     preco_venda = st.number_input("Preço de Venda (R$)", value=None, placeholder="Ex: 150.00", step=5.0)
     frete = st.number_input("Custo do Frete (R$)", value=None, placeholder="Ex: 90.00", step=5.0)
