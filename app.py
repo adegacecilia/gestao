@@ -13,10 +13,10 @@ st.markdown("Adega Cecília")
 # Como queremos zerar as compras e vendas e adicionar manualmente, 
 # criamos tabelas vazias na "memória" do Streamlit.
 if 'compras' not in st.session_state:
-    st.session_state['compras'] = pd.DataFrame(columns=['Data', 'Fornecedor', 'Vinho', 'Qtd', 'Preço Unitário (R$)', 'Custo Total (R$)'])
+    st.session_state['compras'] = pd.DataFrame(columns=['Data', 'Fornecedor', 'Vinho', 'Qtd', 'Preço por Caixa (R$)', 'Custo Total (R$)'])
 
 if 'vendas' not in st.session_state:
-    st.session_state['vendas'] = pd.DataFrame(columns=['Vinho', 'Qtd', 'Data', 'Cliente', 'Preço Venda Unit. (R$)', 'Receita Total (R$)', 'Custo Unitário Base (R$)', 'Lucro (R$)'])
+    st.session_state['vendas'] = pd.DataFrame(columns=['Vinho', 'Qtd', 'Data', 'Cliente', 'Preço Venda (R$)', 'Receita Total (R$)', 'Custo por Caixa (R$)', 'Lucro (R$)'])
 
 # Memória temporária para ir guardando os vinhos de um lote antes de salvar de uma vez
 if 'lote_atual' not in st.session_state:
