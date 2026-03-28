@@ -6,20 +6,38 @@ import datetime # Para pegar a data atual automaticamente nos formulários
 # Configuração da página do Streamlit
 st.set_page_config(page_title="Gestão de Vinhos", page_icon="🍷", layout="wide")
 
-st.title("🍷 Sistema de Gestão de Vinhos")
+st.title("Controle de Estoque")
 st.markdown("Adega Cecília")
 
 # --- PERSONALIZAÇÃO VISUAL (CSS) ---
 st.markdown("""
     <style>
     /* Remove a borda e o brilho vermelho ao focar/clicar nas caixas de seleção (selectbox) e inputs */
-    div[data-baseweb="select"] > div:focus-within {
+    div[data-baseweb="select"] > div {
         box-shadow: none !important;
         border-color: #cccccc !important;
     }
-    div[data-baseweb="input"] > div:focus-within {
+    div[data-baseweb="select"] > div:focus-within, 
+    div[data-baseweb="select"] > div:active, 
+    div[data-baseweb="select"] > div:focus {
         box-shadow: none !important;
-        border-color: #cccccc !important;
+        border-color: #888888 !important;
+    }
+    div[data-baseweb="input"] > div {
+        box-shadow: none !important;
+    }
+    div[data-baseweb="input"] > div:focus-within,
+    div[data-baseweb="input"] > div:active {
+        box-shadow: none !important;
+        border-color: #888888 !important;
+    }
+    /* Remove a cor de destaque nativa do celular ao tocar na tela (Tap Highlight) */
+    * {
+        -webkit-tap-highlight-color: transparent !important;
+    }
+    /* Espaço fantasma para forçar o menu do celular a abrir para baixo */
+    .espaco-fantasma {
+        margin-bottom: 200px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -219,6 +237,9 @@ with tab2:
                         'Custo Total (R$)': qtd_c * preco_u
                     })
                     st.rerun()
+                    
+        # Espaço fantasma para garantir que o dropdown do celular tenha espaço e abra para baixo
+        st.markdown("<div class='espaco-fantasma'></div>", unsafe_allow_html=True)
         
         if len(st.session_state['lote_atual']) > 0:
             st.write("📋 **Itens no Lote Atual:**")
@@ -308,6 +329,9 @@ with tab2:
                     }])
                     st.session_state['vendas'] = pd.concat([st.session_state['vendas'], nova_venda], ignore_index=True)
                     st.rerun()
+                    
+        # Espaço fantasma para garantir que o dropdown do celular tenha espaço e abra para baixo
+        st.markdown("<div class='espaco-fantasma'></div>", unsafe_allow_html=True)
 
     with tab_entregas:
         st.write("Marque as compras e mercadorias que acabaram de chegar fisicamente na adega.")
